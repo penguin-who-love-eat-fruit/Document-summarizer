@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Summarizer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: #4361ee;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        .content {
+            padding: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            resize: vertical;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4361ee;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        button {
+            background: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #3a56d4;
+        }
+        .summary-box {
+            margin-top: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #4361ee;
+            display: none;
+        }
+        .summary-box.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h3 {
+            color: #4361ee;
+            margin-bottom: 15px;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #4361ee;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4361ee;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            button {
+                width: 100%;
+            }
+            .stats {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Document Summarizer</h1>
+            <p class="subtitle">Convert long texts into concise summaries instantly</p>
+        </header>
+        
+        <div class="content">
+            <div class="form-group">
+                <label for="text">Enter Text:</label>
+                <textarea id="text" placeholder="Paste your text here..."></textarea>
+            </div>
+            
+            <div class="controls">
+                <div>
+                    <label for="num-sentences">Summary Length:</label>
+                    <select id="num-sentences">
+                        <option value="3">Short (3 sentences)</option>
+                        <option value="5">Medium (5 sentences)</option>
+                        <option value="7">Long (7 sentences)</option>
+                    </select>
+                </div>
+                <button id="summarize-btn">Generate Summary</button>
+            </div>
+            
+            <div class="loader" id="loader"></div>
+            
+            <div class="summary-box" id="summary-box">
+                <h3>Summary:</h3>
+                <p id="summary-text"></p>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <span>Original Length</span>
+                        <span class="stat-value" id="original-length">0</span>
+                        <span>words</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Summary Length</span>
+                        <span class="stat-value" id="summary-length">0</span>
+                        <span>words</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Reduction</span>
+                        <span class="stat-value" id="reduction">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Client-Side Text Summarizer • No Server Required</p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple NLP functions for text summarization
+        const nlp = {
+            // Tokenize text into sentences
+            tokenizeSentences: function(text) {
+                // Simple sentence tokenization (works for most cases)
+                return text.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s/).filter(s => s.trim());
+            },
+            
+            // Tokenize text into words
+            tokenizeWords: function(text) {
+                return text.toLowerCase().match(/\b(\w+)\b/g) || [];
+            },
+            
+            // List of common English stopwords
+            stopwords: [
+                'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 
+                'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 
+                'to', 'was', 'were', 'will', 'with', 'i', 'you', 'we', 'they', 'this'
+            ],
+            
+            // Summarize text using frequency-based algorithm
+            summarize: function(text, numSentences = 3) {
+                const sentences = this.tokenizeSentences(text);
+                
+                // If text is already short, return as is
+                if (sentences.length <= numSentences) {
+                    return text;
+                }
+                
+                // Tokenize words and remove stopwords
+                const words = this.tokenizeWords(text)
+                    .filter(word => !this.stopwords.includes(word));
+                
+                // Calculate word frequencies
+                const wordFreq = {};
+                words.forEach(word => {
+                    wordFreq[word] = (wordFreq[word] || 0) + 1;
+                });
+                
+                // Score sentences based on word frequencies
+                const sentenceScores = {};
+                sentences.forEach((sentence, index) => {
+                    const sentenceWords = this.tokenizeWords(sentence);
+                    sentenceScores[index] = sentenceWords.reduce((score, word) => {
+                        return score + (wordFreq[word] || 0);
+                    }, 0);
+                });
+                
+                // Get top sentences
+                const topSentenceIndices = Object.keys(sentenceScores)
+                    .sort((a, b) => sentenceScores[b] - sentenceScores[a])
+                    .slice(0, numSentences)
+                    .map(Number)
+                    .sort((a, b) => a - b);
+                
+                // Return summary
+                return topSentenceIndices.map(index => sentences[index]).join(' ');
+            }
+        };
+        
+        // DOM elements
+        const textArea = document.getElementById('text');
+        const numSentencesSelect = document.getElementById('num-sentences');
+        const summarizeBtn = document.getElementById('summarize-btn');
+        const summaryBox = document.getElementById('summary-box');
+        const summaryText = document.getElementById('summary-text');
+        const originalLength = document.getElementById('original-length');
+        const summaryLength = document.getElementById('summary-length');
+        const reduction = document.getElementById('reduction');
+        const loader = document.getElementById('loader');
+        
+        // Summarize button click handler
+        summarizeBtn.addEventListener('click', function() {
+            const text = textArea.value.trim();
+            
+            if (!text) {
+                alert('Please enter some text to summarize');
+                return;
+            }
+            
+            // Show loader
+            loader.style.display = 'block';
+            summaryBox.classList.remove('visible');
+            
+            // Process in background to avoid blocking UI
+            setTimeout(() => {
+                try {
+                    const numSentences = parseInt(numSentencesSelect.value);
+                    
+                    // Calculate statistics
+                    const wordCount = text.split(/\s+/).length;
+                    
+                    // Generate summary
+                    const summary = nlp.summarize(text, numSentences);
+                    const summaryWordCount = summary.split(/\s+/).length;
+                    
+                    // Calculate reduction percentage
+                    const reductionPercent = wordCount > 0 
+                        ? Math.round((1 - summaryWordCount / wordCount) * 100) 
+                        : 0;
+                    
+                    // Update UI
+                    summaryText.textContent = summary;
+                    originalLength.textContent = wordCount;
+                    summaryLength.textContent = summaryWordCount;
+                    reduction.textContent = `${reductionPercent}%`;
+                    
+                    // Show results
+                    summaryBox.classList.add('visible');
+                } catch (error) {
+                    console.error(error);
+                    alert('Error generating summary. Please try again with different text.');
+                } finally {
+                    // Hide loader
+                    loader.style.display = 'none';
+                }
+            }, 100);
+        });
+
+        const exampleText = `In 2023, a US grocer recalled over 10,000 cases of broccoli cheddar soup over concerns they contained too much of an unintended ingredient. That ingredient? Bugs. We know insects regularly come into contact with our food— but how many are you actually eating? And is it okay? Let’s start with an extreme example: figs and their conspicuously close bond with certain bugs.
+
+00:35
+Around 80 million years ago, wasps started pollinating figs. And today, each of the approximately 750 fig tree species depends on at least one unique species of tiny wasps. Pollinator-plant relationships can get hyper-specific. And figs guard their flowers especially tight for fig wasps. Technically, a fig isn't a fruit, but a fleshy bundle derived from stem tissues that holds hundreds of internal flowers— like a hidden garden.
+
+01:05
+Humans typically harvest one species: the common fig. Its breeding system, called gynodioecy, is seen in less than 1% of flowering plants. It works with some common fig trees having seed-producing female parts, while others, called caprifigs, have both female seed-producing and male pollen-producing parts. Wasps get involved when a female fig wasp full of eggs follows odor cues to a common fig tree and thrusts herself into the minuscule hole at a developing fig’s base. From there, depending on whether it's a caprifig or a female fig, things go one of two ways, the outcome being either more wasps or more figs.
+
+01:48
+If it’s a caprifig, the wasp deposits her eggs into the flowers’ ovaries, then dies. Instead of developing seeds, those flower ovaries turn into galls that nurture the wasp’s developing offspring. Wingless and blind, the males hatch first, open the remaining galls, and fertilize the developing females— yes, oftentimes their sisters, unless another wasp laid eggs here. Next, the males dig exit pathways they never use themselves because they die before leaving the fig. Finally, the already-fertilized females hatch, exit through the male-made holes, getting coated with pollen on the way, and fly off to other figs.
+
+02:31
+If a wasp winds up in a female fig, however, she can’t lay her eggs because the flowers are structured differently. So, she dies without offspring— but she did pollinate the fig’s flowers, so the tree can reproduce. Female wasps don’t know which kind of fig they’re entering— and whether it’ll give her offspring or use her to make its own— because fig trees smell the same, regardless of sex. This ensures that a good portion of common figs can also reproduce and not just further wasp-kind.
+
+03:03
+That was how things went— until humans intervened. Archaeological records suggest that people in the Jordan Valley grew figs some 11,400 years ago, possibly making them the first domesticated crop. When a genetic mutation emerged that allowed the tree’s fruit to ripen without being pollinated, people began propagating it with cuttings. And suddenly the common fig wasn’t beholden to wasps; it had a new partner to multiply with.`;
+        
+        textArea.value = exampleText;
+    </script>
+</body>
+</html>
