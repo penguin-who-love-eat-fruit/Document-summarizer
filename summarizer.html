@@ -223,46 +223,36 @@
     </div>
 
     <script>
-        // Simple NLP functions for text summarization
         const nlp = {
-            // Tokenize text into sentences
             tokenizeSentences: function(text) {
-                // Simple sentence tokenization (works for most cases)
                 return text.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s/).filter(s => s.trim());
             },
             
-            // Tokenize text into words
             tokenizeWords: function(text) {
                 return text.toLowerCase().match(/\b(\w+)\b/g) || [];
             },
             
-            // List of common English stopwords
             stopwords: [
                 'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from', 
                 'has', 'he', 'in', 'is', 'it', 'its', 'of', 'on', 'that', 'the', 
                 'to', 'was', 'were', 'will', 'with', 'i', 'you', 'we', 'they', 'this'
             ],
             
-            // Summarize text using frequency-based algorithm
             summarize: function(text, numSentences = 3) {
                 const sentences = this.tokenizeSentences(text);
                 
-                // If text is already short, return as is
                 if (sentences.length <= numSentences) {
                     return text;
                 }
                 
-                // Tokenize words and remove stopwords
                 const words = this.tokenizeWords(text)
                     .filter(word => !this.stopwords.includes(word));
                 
-                // Calculate word frequencies
                 const wordFreq = {};
                 words.forEach(word => {
                     wordFreq[word] = (wordFreq[word] || 0) + 1;
                 });
                 
-                // Score sentences based on word frequencies
                 const sentenceScores = {};
                 sentences.forEach((sentence, index) => {
                     const sentenceWords = this.tokenizeWords(sentence);
@@ -271,19 +261,16 @@
                     }, 0);
                 });
                 
-                // Get top sentences
                 const topSentenceIndices = Object.keys(sentenceScores)
                     .sort((a, b) => sentenceScores[b] - sentenceScores[a])
                     .slice(0, numSentences)
                     .map(Number)
                     .sort((a, b) => a - b);
                 
-                // Return summary
                 return topSentenceIndices.map(index => sentences[index]).join(' ');
             }
         };
         
-        // DOM elements
         const textArea = document.getElementById('text');
         const numSentencesSelect = document.getElementById('num-sentences');
         const summarizeBtn = document.getElementById('summarize-btn');
@@ -294,7 +281,6 @@
         const reduction = document.getElementById('reduction');
         const loader = document.getElementById('loader');
         
-        // Summarize button click handler
         summarizeBtn.addEventListener('click', function() {
             const text = textArea.value.trim();
             
@@ -303,62 +289,38 @@
                 return;
             }
             
-            // Show loader
             loader.style.display = 'block';
             summaryBox.classList.remove('visible');
             
-            // Process in background to avoid blocking UI
             setTimeout(() => {
                 try {
                     const numSentences = parseInt(numSentencesSelect.value);
                     
-                    // Calculate statistics
                     const wordCount = text.split(/\s+/).length;
                     
-                    // Generate summary
                     const summary = nlp.summarize(text, numSentences);
                     const summaryWordCount = summary.split(/\s+/).length;
                     
-                    // Calculate reduction percentage
                     const reductionPercent = wordCount > 0 
                         ? Math.round((1 - summaryWordCount / wordCount) * 100) 
                         : 0;
                     
-                    // Update UI
                     summaryText.textContent = summary;
                     originalLength.textContent = wordCount;
                     summaryLength.textContent = summaryWordCount;
                     reduction.textContent = `${reductionPercent}%`;
                     
-                    // Show results
                     summaryBox.classList.add('visible');
                 } catch (error) {
                     console.error(error);
                     alert('Error generating summary. Please try again with different text.');
                 } finally {
-                    // Hide loader
                     loader.style.display = 'none';
                 }
             }, 100);
         });
 
-        const exampleText = `In 2023, a US grocer recalled over 10,000 cases of broccoli cheddar soup over concerns they contained too much of an unintended ingredient. That ingredient? Bugs. We know insects regularly come into contact with our food— but how many are you actually eating? And is it okay? Let’s start with an extreme example: figs and their conspicuously close bond with certain bugs.
-
-00:35
-Around 80 million years ago, wasps started pollinating figs. And today, each of the approximately 750 fig tree species depends on at least one unique species of tiny wasps. Pollinator-plant relationships can get hyper-specific. And figs guard their flowers especially tight for fig wasps. Technically, a fig isn't a fruit, but a fleshy bundle derived from stem tissues that holds hundreds of internal flowers— like a hidden garden.
-
-01:05
-Humans typically harvest one species: the common fig. Its breeding system, called gynodioecy, is seen in less than 1% of flowering plants. It works with some common fig trees having seed-producing female parts, while others, called caprifigs, have both female seed-producing and male pollen-producing parts. Wasps get involved when a female fig wasp full of eggs follows odor cues to a common fig tree and thrusts herself into the minuscule hole at a developing fig’s base. From there, depending on whether it's a caprifig or a female fig, things go one of two ways, the outcome being either more wasps or more figs.
-
-01:48
-If it’s a caprifig, the wasp deposits her eggs into the flowers’ ovaries, then dies. Instead of developing seeds, those flower ovaries turn into galls that nurture the wasp’s developing offspring. Wingless and blind, the males hatch first, open the remaining galls, and fertilize the developing females— yes, oftentimes their sisters, unless another wasp laid eggs here. Next, the males dig exit pathways they never use themselves because they die before leaving the fig. Finally, the already-fertilized females hatch, exit through the male-made holes, getting coated with pollen on the way, and fly off to other figs.
-
-02:31
-If a wasp winds up in a female fig, however, she can’t lay her eggs because the flowers are structured differently. So, she dies without offspring— but she did pollinate the fig’s flowers, so the tree can reproduce. Female wasps don’t know which kind of fig they’re entering— and whether it’ll give her offspring or use her to make its own— because fig trees smell the same, regardless of sex. This ensures that a good portion of common figs can also reproduce and not just further wasp-kind.
-
-03:03
-That was how things went— until humans intervened. Archaeological records suggest that people in the Jordan Valley grew figs some 11,400 years ago, possibly making them the first domesticated crop. When a genetic mutation emerged that allowed the tree’s fruit to ripen without being pollinated, people began propagating it with cuttings. And suddenly the common fig wasn’t beholden to wasps; it had a new partner to multiply with.`;
-        
+        const exampleText = insert text here!!!        
         textArea.value = exampleText;
     </script>
 </body>
